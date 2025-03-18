@@ -8,12 +8,12 @@ const productos = reactive([
   { nombre: "Teclado", precio: 80, stock: 0, disponible: false },
 ]);
 
-// Usamos watch() para actualizar la propiedad disponible
-productos.forEach((producto, index) => {
+// Watch para actualizar la propiedad disponible
+productos.forEach((producto) => {
   watch(
     () => producto.stock,
     (nuevoValor) => {
-      productos[index].disponible = nuevoValor > 0;
+      producto.disponible = nuevoValor > 0;
     }
   );
 });
@@ -28,18 +28,39 @@ const disminuirStock = (producto: { stock: number }) => {
 </script>
 
 <template>
-  <div>
-    <h1>Inventario</h1>
-    <ul>
-      <li v-for="(producto, index) in productos" :key="index">
-        <strong>{{ producto.nombre }}</strong> - ${{ producto.precio }}
-        <p>Stock: {{ producto.stock }}</p>
-        <p :style="{ color: producto.disponible ? 'green' : 'red' }">
+  <div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">Inventario de Productos</h1>
+    
+    <!-- Grid para alinear productos en 3 columnas en pantallas grandes -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div v-for="(producto, index) in productos" :key="index" 
+           class="border rounded-lg shadow-lg p-6 bg-white flex flex-col items-center text-center">
+        <h2 class="text-xl font-semibold">{{ producto.nombre }}</h2>
+        <p class="text-gray-600 text-lg font-medium">${{ producto.precio }}</p>
+        <p class="text-sm text-gray-500">Stock: {{ producto.stock }}</p>
+        
+        <!-- Color dinámico para disponibilidad con CSS en línea -->
+        <p class="text-lg font-bold mt-2" :style="{ color: producto.disponible ? 'green' : 'red' }">
           {{ producto.disponible ? "Disponible" : "Agotado" }}
         </p>
-        <button @click="aumentarStock(producto)">Aumentar Stock</button>
-        <button @click="disminuirStock(producto)">Disminuir Stock</button>
-      </li>
-    </ul>
+        
+        <div class="mt-4 flex gap-2">
+          <button @click="aumentarStock(producto)" 
+                  class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            +
+          </button>
+          <button @click="disminuirStock(producto)" 
+                  class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+            -
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.container {
+  max-width: 1200px;
+}
+</style>
