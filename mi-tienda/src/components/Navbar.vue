@@ -1,43 +1,46 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
+// Productos disponibles en el dropdown
+const productos = ["Todos", "Laptop", "Mouse", "Teclado"];
+const seleccion = ref("Todos");
+
+// Obtener el router de Vue
+const route = useRoute();
 const router = useRouter();
-const nombreTienda = "TechStore";
 
-// Estado para seleccionar un producto
-const productoSeleccionado = ref("Todos");
-
-// Cambiar la vista al seleccionar un producto
+// Función para cambiar la vista
 const cambiarVista = () => {
-  if (productoSeleccionado.value === "Todos") {
-    router.push("/");
+  if (seleccion.value === "Todos") {
+    router.push("/"); // Ir a la vista principal
   } else {
-    router.push(`/producto/${productoSeleccionado.value}`);
+    router.push(`/producto/${seleccion.value}`); // Ir a la vista del producto seleccionado
   }
 };
+
+// Detectar cambios en la URL y actualizar el desplegable
+watch(
+  () => route.params.nombre,
+  (nuevoNombre) => {
+    seleccion.value = nuevoNombre ? String(nuevoNombre) : "Todos";
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <nav class="bg-gray-900 text-white p-4 flex justify-between items-center">
-    <!-- Logo y nombre -->
-    <div class="flex items-center gap-3">
-      <img src="/logo.webp" alt="Logo" class="h-10 w-10" />
-      <h1 class="text-xl font-bold">{{ nombreTienda }}</h1>
+    <div class="flex items-center gap-4">
+      <img src="/logo.webp" alt="Logo" class="w-10 h-10">
+      <h1 class="text-xl font-bold">TechStore</h1>
     </div>
 
-    <!-- Selección de producto -->
-    <div>
-      <select
-        v-model="productoSeleccionado"
-        @change="cambiarVista"
-        class="bg-gray-700 text-white p-2 rounded"
-      >
-        <option value="Todos">Ventana Principal</option>
-        <option value="Laptop">Laptop</option>
-        <option value="Mouse">Mouse</option>
-        <option value="Teclado">Teclado</option>
-      </select>
-    </div>
+    <!-- Dropdown para seleccionar vista -->
+    <select v-model="seleccion" @change="cambiarVista" class="bg-gray-700 text-white p-2 rounded">
+      <option v-for="producto in productos" :key="producto" :value="producto">
+        {{ producto }}
+      </option>
+    </select>
   </nav>
 </template>

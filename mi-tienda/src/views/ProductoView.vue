@@ -1,33 +1,98 @@
 <script setup lang="ts">
 import ProductoDetalle from "../components/ProductoDetalle.vue";
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { db } from "../firebase/firebase";
+import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 
 // Obtener la ruta y el router
 const route = useRoute();
 const router = useRouter();
 
-// Estado para almacenar el nombre del producto y el objeto del producto
-const nombreProducto = ref(route.params.nombre);
-const productos = ref([
-  { nombre: "Laptop", precio: 1000, stock: 5, disponible: true },
-  { nombre: "Mouse", precio: 50, stock: 2, disponible: true },
-  { nombre: "Teclado", precio: 80, stock: 0, disponible: false },
-]);
+// Estado para almacenar el producto seleccionado
+interface Producto {
+  id: string;
+  nombre: string;
+  precio: number;
+  stock: number;
+  imagen: string;
+  disponible: boolean;
+}
 
-// Encontrar el producto seleccionado
-const producto = ref(productos.value.find((p) => p.nombre === nombreProducto.value));
+const producto = ref<Producto | null>(null);
+const cargando = ref(true);
+const error = ref(""); 
 
-// **Detectar cambios en la URL y actualizar el producto**
+//   Nueva función para buscar un producto en Firestore por "nombre"
+const cargarProducto = async (nombreProducto: string) => {
+  try {
+    cargando.value = true;
+    error.value = "";
+    console.log(`🔍 Buscando producto en Firestore: ${nombreProducto}`);
+
+    //   Realizar consulta en Firestore donde el campo "nombre" coincida
+    const productosRef = collection(db, "productos");
+    const q = query(productosRef, where("nombre", "==", nombreProducto));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+  const docSnap = querySnapshot.docs[0]; // Tomamos el primer resultado
+  const data = docSnap.data() as Producto;
+  
+  //   Asegurar que "disponible" se calcule correctamente basado en stock
+  producto.value = {
+    id: docSnap.id,
+    nombre: data.nombre,
+    precio: data.precio,
+    stock: data.stock,
+    imagen: data.imagen || "",
+    disponible: data.stock > 0 // Si el stock es mayor a 0, está disponible
+  };
+
+  console.log("  Producto encontrado:", producto.value);
+} else {
+  console.log("  Producto no encontrado"); 
+  error.value = "Producto no encontrado en la base de datos.";
+}
+  } catch (err) {
+    console.error("  Error al cargar el producto:", err);
+    error.value = "Error al cargar el producto.";
+  } finally {
+    cargando.value = false;
+  }
+};
+
+//   Función para actualizar stock en Firestore
+const actualizarStock = async (cantidad: number) => {
+  if (!producto.value) return;
+
+  try {
+    const nuevoStock = producto.value.stock + cantidad;
+    if (nuevoStock < 0) return; // No permitir stock negativo
+
+    const productoRef = doc(db, "productos", producto.value.id);
+    await updateDoc(productoRef, { stock: nuevoStock });
+
+    producto.value.stock = nuevoStock;
+    producto.value.disponible = nuevoStock > 0;
+  } catch (error) {
+    console.error("  Error al actualizar el stock:", error);
+  }
+};
+
+// Cargar el producto cuando se monte el componente
+onMounted(() => {
+  if (route.params.nombre) {
+    cargarProducto(route.params.nombre as string);
+  }
+});
+
+// Detectar cambios en la URL y actualizar el producto
 watch(
   () => route.params.nombre,
   (nuevoNombre) => {
-    nombreProducto.value = nuevoNombre;
-    producto.value = productos.value.find((p) => p.nombre === nuevoNombre);
-
-    // Si no encuentra el producto, volver a la vista principal
-    if (!producto.value) {
-      router.push("/");
+    if (nuevoNombre) {
+      cargarProducto(nuevoNombre as string);
     }
   }
 );
@@ -35,7 +100,15 @@ watch(
 
 <template>
   <div class="container mx-auto p-6">
-    <ProductoDetalle v-if="producto" :producto="producto" @volver="router.push('/')" />
-    <p v-else class="text-red-500 text-center">Producto no encontrado.</p>
+    <button @click="router.push('/')" class="mb-4 text-blue-600 underline">⬅ Volver</button>
+
+    <div v-if="cargando" class="text-center text-gray-600">Cargando producto...</div>
+    <div v-else-if="error" class="text-red-500 text-center">{{ error }}</div>
+
+    <ProductoDetalle 
+      v-if="producto" 
+      :producto="producto"
+      @actualizar-stock="actualizarStock"
+    />
   </div>
 </template>

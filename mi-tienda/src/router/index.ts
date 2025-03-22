@@ -4,7 +4,7 @@ import ProductoView from "../views/ProductoView.vue";
 
 const routes = [
   { path: "/", component: Home },
-  { path: "/producto/:nombre", component: ProductoView },
+  { path: "/producto/:nombre", component: ProductoView }, 
 ];
 
 const router = createRouter({
