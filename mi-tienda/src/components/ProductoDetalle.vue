@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps(["producto"]);
+defineProps(["producto"]);
 const emit = defineEmits(["actualizar-stock", "agregar-al-carrito"]);
 </script>
 
