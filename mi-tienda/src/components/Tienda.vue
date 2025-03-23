@@ -30,19 +30,20 @@ const observarStock = (producto: Producto) => {
 
 const cargarProductos = async () => {
   const querySnapshot = await getDocs(collection(db, "productos"));
-  productos.lista = querySnapshot.docs.map(doc => {
-    const data = doc.data() as Producto;
-    const producto: Producto = {
-      id: doc.id,
-      nombre: data.nombre,
-      precio: data.precio,
-      stock: data.stock,
-      imagen: data.imagen || "",
-      disponible: data.stock > 0
-    };
-    observarStock(producto); // Activar watch de cada prod
-    return producto;
+  productos.lista = querySnapshot.docs.map((doc) => {
+  const data = doc.data() as Producto;
+  const producto = reactive({
+    id: doc.id,
+    nombre: data.nombre,
+    precio: data.precio,
+    stock: data.stock,
+    imagen: data.imagen || "",
+    disponible: data.stock > 0,
   });
+  observarStock(producto);
+  return producto;
+});
+
 };
 
 const actualizarStock = async (producto: Producto, cantidad: number) => {
@@ -85,18 +86,20 @@ onMounted(cargarProductos);
         </p>
 
         <div class="mt-4 flex gap-2">
-          <button @click="actualizarStock(producto, 1)" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          <button @click="(e) => { actualizarStock(producto, 1); (e.target as HTMLElement)?.blur(); }"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             +
           </button>
-          <button @click="actualizarStock(producto, -1)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+          <button @click="(e) => { actualizarStock(producto, -1); (e.target as HTMLElement)?.blur(); }"
+           class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
             -
           </button>
-          <button
-            @click="agregarAlCarrito(producto)"
-            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-          >
+
+          <button @click="(e) => { agregarAlCarrito(producto); (e.target as HTMLElement)?.blur(); }"
+           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             🛒
           </button>
+
         </div>
       </div>
     </div>

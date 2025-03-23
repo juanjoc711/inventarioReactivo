@@ -24,19 +24,19 @@ const emit = defineEmits(["actualizar-stock", "agregar-al-carrito"]);
 
     <div class="mt-4 flex justify-center gap-2">
       <button
-        @click="emit('actualizar-stock', 1)"
+        @click="(e) => { emit('actualizar-stock', 1); (e.target as HTMLElement)?.blur(); }"
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
         +
       </button>
       <button
-        @click="emit('actualizar-stock', -1)"
+        @click="(e) => { emit('actualizar-stock', -1); (e.target as HTMLElement)?.blur(); }"
         class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
       >
         -
       </button>
       <button
-        @click="emit('agregar-al-carrito')"
+        @click="(e) => { emit('agregar-al-carrito'); (e.target as HTMLElement)?.blur(); }"
         class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
       >
         🛒

@@ -1,145 +1,136 @@
-#  Respuestas al Enunciado de la Tarea
+# 📘 Respuestas al Enunciado de la Tarea
 
-Este documento responde a las preguntas planteadas en la tarea sobre reactividad en Vue 3 utilizando `reactive()` y `watch()`, evitando el uso de `computed()`.
+Este documento responde a las preguntas planteadas en la práctica 1 sobre **reactividad en Vue**.
 
-## 1️ Vue no detecta cambios dentro de objetos reactivos de la forma que esperarías. ¿Cómo podrías observar un cambio en una propiedad anidada?
+---
 
-En Vue 3, cuando usamos `reactive()`, Vue no detecta automáticamente cambios en propiedades anidadas porque `reactive()` trabaja con proxies y no realiza una observación profunda por defecto.
+## 1️⃣ Vue no detecta cambios dentro de objetos reactivos de la forma que esperarías. ¿Cómo podrías observar un cambio en una propiedad anidada?
 
-###  Solución: Usar `watch()` con una función que acceda a la propiedad específica
+Cuando se utiliza `reactive()` en Vue 3, Vue **no observa automáticamente propiedades anidadas** en profundidad. Esto se debe a que `reactive()` crea un Proxy superficial y **solo intercepta accesos y asignaciones directas**.
 
-Si tenemos un objeto anidado dentro de `reactive()`, debemos observar la propiedad específica dentro del objeto:
+### ✅ Solución
 
-```typescript
-import { reactive, watch } from "vue";
+Usar `watch()` con una función que acceda explícitamente a la propiedad anidada.
 
-const producto = reactive({
-  nombre: "Laptop",
-  detalles: {
-    stock: 10,
+### 📦 Ejemplo basado en el proyecto:
+
+En este proyecto, cada producto es un objeto anidado dentro de una lista reactiva. Para detectar cambios en `stock` (una propiedad del objeto `producto`), usamos:
+
+```ts
+watch(
+  () => producto.stock,
+  (nuevoStock) => {
+    producto.disponible = nuevoStock > 0;
   },
-});
-
-// Observar cambios en la propiedad anidada "stock"
-watch(
-  () => producto.detalles.stock,
-  (nuevoValor, viejoValor) => {
-    console.log(`Stock cambió de ${viejoValor} a ${nuevoValor}`);
-  }
-);
-
-// Ejemplo de cambio en la propiedad
-producto.detalles.stock = 5; // Esto activará el watch()
-```
-
-###  Explicación:
-
-- Se usa una función en `watch()` (`() => producto.detalles.stock`) para observar el `stock` dentro de `detalles`.
-- Cuando `stock` cambia, el callback de `watch()` se ejecuta y muestra los valores antiguo y nuevo.
-
-## 2️ `watch()` permite escuchar cambios en propiedades específicas dentro de `reactive()`, explica cómo funciona.
-
-`watch()` en Vue 3 observa cambios en una o varias propiedades y ejecuta una función cuando detecta un cambio.
-
-###  Estructura básica de `watch()`
-
-```typescript
-watch(
-  fuente,        // Propiedad reactiva a observar
-  callback,      // Función que se ejecuta cuando la propiedad cambia
-  opciones       // Opcional: { deep: true } para observar cambios profundos
+  { immediate: true }
 );
 ```
 
-###  Ejemplo de `watch()` en un objeto reactivo
+Este patrón se aplica tanto en `Tienda.vue` como en `ProductoView.vue`.
 
-```typescript
-import { reactive, watch } from "vue";
+### 🧠 Por qué funciona
 
-const usuario = reactive({
-  nombre: "Carlos",
-  edad: 25,
-});
+- `() => producto.stock` obliga a Vue a observar esa propiedad específica.
+- El `watch()` responde a cada cambio en `stock`, permitiendo actualizar automáticamente `disponible`.
 
-// Observar cambios en la edad del usuario
+---
+
+## 2️⃣ `watch()` permite escuchar cambios en propiedades específicas dentro de `reactive()`, explica cómo funciona.
+
+`watch()` permite reaccionar ante cambios de estado observando una fuente reactiva. La fuente puede ser un `ref`, una propiedad dentro de `reactive()`, o incluso una función que acceda a varias propiedades.
+
+### 🧱 Estructura básica:
+
+```ts
 watch(
-  () => usuario.edad,
-  (nuevoValor, viejoValor) => {
-    console.log(`La edad cambió de ${viejoValor} a ${nuevoValor}`);
-  }
-);
-
-usuario.edad = 30; // Esto activará el watch()
-```
-
-###  Observación profunda (`deep: true`)
-
-Si el objeto tiene propiedades anidadas, necesitamos `deep: true` para detectar cambios en todo el objeto:
-
-```typescript
-watch(
-  () => usuario,
-  (nuevoValor) => {
-    console.log("El objeto usuario cambió:", nuevoValor);
+  fuente,
+  (nuevoValor, valorAnterior) => {
+    // código reactivo
   },
-  { deep: true } // Necesario para detectar cambios en propiedades internas
+  opciones
 );
 ```
 
-###  Diferencia clave:
+### 🛠️ Aplicación en el proyecto:
 
-- Sin `deep: true`: Solo detecta cambios en la referencia del objeto.
-- Con `deep: true`: Detecta cambios dentro de cualquier propiedad anidada.
-
-## 3️ ¿Cómo harías que un `watch()` detecte cambios en `stock` dentro de un array de productos?
-
-Cuando usamos un array de objetos con `reactive()`, Vue no detecta cambios internos en los objetos. Debemos verificar cada objeto individualmente usando `watch()`.
-
-###  Solución: Crear un `watch()` por cada producto en el array
-
-```typescript
-import { reactive, watch } from "vue";
-
-const productos = reactive([
-  { nombre: "Laptop", stock: 5, disponible: true },
-  { nombre: "Mouse", stock: 2, disponible: true },
-  { nombre: "Teclado", stock: 0, disponible: false },
-]);
-
-// Configurar un watch() para cada producto
-productos.forEach((producto, index) => {
+```ts
+const observarStock = (producto: Producto) => {
   watch(
     () => producto.stock,
-    (nuevoValor) => {
-      productos[index].disponible = nuevoValor > 0;
-      console.log(
-        `Stock de ${productos[index].nombre} cambió a ${nuevoValor}. Disponible: ${productos[index].disponible}`
-      );
-    }
+    (nuevoStock) => {
+      producto.disponible = nuevoStock > 0;
+    },
+    { immediate: true }
   );
-});
-
-// Simulando cambios en el stock
-productos[0].stock = 0; // Se actualizará automáticamente disponible = false
-productos[1].stock = 5; // Se actualizará automáticamente disponible = true
+};
 ```
 
-###  Explicación:
+Se llama a `observarStock()` por cada producto cuando se cargan desde Firebase.
 
-- Se recorre el array con `forEach()` y se crea un `watch()` para cada producto.
-- Cada `watch()` observa `stock` de un producto y actualiza `disponible` automáticamente.
-- Si el `stock` baja a 0, `disponible` cambia a `false`.
-- Si el `stock` sube, `disponible` vuelve a `true`.
+### 🧠 Sobre `deep: true`
 
-##  Conclusión
+- No se necesita `deep: true` cuando se observa una propiedad específica con una función.
+- Solo se requiere en objetos complejos si se desea reaccionar a cualquier cambio interno.
 
-- Vue no detecta automáticamente cambios en propiedades anidadas dentro de `reactive()`, por lo que debemos usar `watch()`.
-- `watch()` monitorea cambios en propiedades reactivas y ejecuta una función cuando hay modificaciones.
-- Para detectar cambios en arrays de objetos, se debe asignar un `watch()` a cada objeto dentro del array.
+---
 
- Este enfoque permite manejar reactividad de forma eficiente sin usar `computed()`, cumpliendo con los requisitos de la tarea. 🚀
+## 3️⃣ ¿Cómo harías que un `watch()` detecte cambios en `stock` dentro de un array de productos?
 
-##  Referencias
+Vue no detecta automáticamente los cambios dentro de objetos contenidos en un array reactivo. Por lo tanto, para detectar cambios en la propiedad `stock` de cada producto, hay que crear un `watch()` por cada uno.
 
-- [Vue 3 Documentation - Reactivity](https://v3.vuejs.org/guide/reactivity.html)
-- [Vue 3 `watch()` API](https://v3.vuejs.org/api/computed-watch-api.html#watch)
+### ✅ Solución utilizada en el proyecto:
+
+```ts
+const productos = reactive<{ lista: Producto[] }>({ lista: [] });
+
+const observarStock = (producto: Producto) => {
+  watch(
+    () => producto.stock,
+    (nuevoStock) => {
+      producto.disponible = nuevoStock > 0;
+    },
+    { immediate: true }
+  );
+};
+
+const cargarProductos = async () => {
+  const querySnapshot = await getDocs(collection(db, "productos"));
+productos.lista = querySnapshot.docs.map(doc => {
+  const data = doc.data() as Producto;
+  const producto = reactive({
+    id: doc.id,
+    nombre: data.nombre,
+    precio: data.precio,
+    stock: data.stock,
+    imagen: data.imagen || "",
+    disponible: data.stock > 0
+  });
+  observarStock(producto); // Activa reactividad real en cada producto
+  return producto;
+});
+
+};
+```
+
+### 🧠 Por qué funciona
+
+- Se convierte cada producto en un objeto reactivo usando reactive(), y luego se le aplica un watch() individual sobre stock. Esto asegura que Vue detecte correctamente los cambios internos de cada objeto dentro del array.
+- Si el valor cambia (ya sea desde el frontend o por acción del usuario), `disponible` se actualiza en tiempo real.
+
+---
+
+## ✅ Conclusión
+
+- Vue 3 no observa automáticamente cambios anidados: hay que ser explícito.
+- `watch()` es la herramienta adecuada para vincular `stock` con `disponible`.
+- En arrays de objetos (como productos en Firestore), es necesario un `watch()` por elemento.
+
+La solución implementada cumple con todas las restricciones del enunciado, especialmente evitando `computed()` y usando únicamente `reactive()` y `watch()` de manera eficiente.
+
+---
+
+## 📚 Referencias
+
+- 🔗 [Vue 3 - Reactivity Guide](https://vuejs.org/guide/essentials/reactivity-fundamentals.html)
+- 🔗 [Vue 3 - watch() API](https://vuejs.org/api/reactivity-core.html#watch)
+- 🔗 [Vue 3 - Reactivity with reactive()](https://vuejs.org/api/reactivity-core.html#reactive)

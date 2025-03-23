@@ -28,13 +28,13 @@ const router = useRouter();
         <div class="flex items-center gap-2">
           <p>${{ item.precio * item.cantidad }}</p>
           <button
-            @click="carrito.restarUno(item.id)"
+            @click="(e) => { carrito.restarUno(item.id); (e.target as HTMLElement)?.blur(); }"
             class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
           >
             -
           </button>
           <button
-            @click="carrito.quitarProducto(item.id)"
+            @click="(e) => { carrito.quitarProducto(item.id); (e.target as HTMLElement)?.blur(); }"
             class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
           >
             🗑
