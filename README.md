@@ -6,18 +6,19 @@ Proyecto web desarrollado en **Vue 3 + TypeScript + Firebase**, que permite gest
 
 ## 📖 Índice
 
-1. [🚀 Características Principales](#🚀-características-principales)
-2. [💻 Requisitos y Configuración](#💻-requisitos-y-configuración)
-    - [⚙️ Ejecutar con Docker](#⚙️-ejecutar-con-docker)
-    - [🧪 Ejecutar Manualmente](#🧪-ejecutar-manualmente-sin-docker)
-3. [🛠️ Tecnologías y Arquitectura](#🛠️-tecnologías-y-arquitectura)
-    - [📦 Diagrama de Arquitectura](#📦-diagrama-de-arquitectura)
-    - [📐 Diagrama de Clases](#📐-diagrama-de-clases)
-4. [📂 Estructura del Proyecto](#📂-estructura-del-proyecto)
-5. [🛢️ Estructura de la Base de Datos](#🛢️-estructura-de-la-base-de-datos)
-6. [📝 Contribución](#📝-contribución)
-7. [🚀 Autor](#🚀-autor)
-8. [📄 Preguntas de la Tarea](#📄-preguntas-de-la-tarea)
+1. [🚀 Características Principales](#características-principales)
+2. [💻 Requisitos y Configuración](#requisitos-y-configuración)
+    - [⚙️ Ejecutar con Docker](#ejecutar-con-docker)
+    - [🧪 Ejecutar Manualmente](#ejecutar-manualmente-sin-docker)
+3. [🛠️ Tecnologías y Arquitectura](#tecnologías-y-arquitectura)
+    - [📦 Diagrama de Arquitectura](#diagrama-de-arquitectura)
+    - [📐 Diagrama de Clases](#diagrama-de-clases)
+4. [📂 Estructura del Proyecto](#estructura-del-proyecto)
+5. [🛢️ Estructura de la Base de Datos](#estructura-de-la-base-de-datos)
+6. [📝 Contribución](#contribución)
+7. [🚀 Autor](#autor)
+8. [📄 Preguntas de la Tarea](#preguntas-de-la-tarea)
+
 
 ---
 
