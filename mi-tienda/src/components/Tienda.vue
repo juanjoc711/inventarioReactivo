@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { reactive, watch, onMounted } from "vue";
 import { db } from "../firebase/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { useCarritoStore } from "../stores/useCarritoStore";
@@ -15,13 +15,24 @@ interface Producto {
   disponible: boolean;
 }
 
-const productos = ref<Producto[]>([]);
+const productos = reactive<{ lista: Producto[] }>({ lista: [] });
+
+// Función que crea un watch individual por producto
+const observarStock = (producto: Producto) => {
+  watch(
+    () => producto.stock,
+    (nuevoStock) => {
+      producto.disponible = nuevoStock > 0;
+    },
+    { immediate: true }
+  );
+};
 
 const cargarProductos = async () => {
   const querySnapshot = await getDocs(collection(db, "productos"));
-  productos.value = querySnapshot.docs.map(doc => {
+  productos.lista = querySnapshot.docs.map(doc => {
     const data = doc.data() as Producto;
-    return {
+    const producto: Producto = {
       id: doc.id,
       nombre: data.nombre,
       precio: data.precio,
@@ -29,24 +40,28 @@ const cargarProductos = async () => {
       imagen: data.imagen || "",
       disponible: data.stock > 0
     };
+    observarStock(producto); // Activar watch de cada prod
+    return producto;
   });
 };
 
 const actualizarStock = async (producto: Producto, cantidad: number) => {
-  if (producto.stock + cantidad >= 0) {
+  const nuevoStock = producto.stock + cantidad;
+  if (nuevoStock >= 0) {
     const productoRef = doc(db, "productos", producto.id);
-    await updateDoc(productoRef, { stock: producto.stock + cantidad });
-    cargarProductos();
+    await updateDoc(productoRef, { stock: nuevoStock });
+    producto.stock = nuevoStock;
+    // disponible se actualizará por su watch
   }
 };
 
 const agregarAlCarrito = async (producto: Producto) => {
   if (producto.stock > 0) {
     await carrito.agregarProducto(producto);
-    await cargarProductos(); 
+    producto.stock -= 1;
+    // disponible se actualizará por su watch
   }
 };
-
 
 onMounted(cargarProductos);
 </script>
@@ -57,7 +72,7 @@ onMounted(cargarProductos);
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
       <div
-        v-for="producto in productos"
+        v-for="producto in productos.lista"
         :key="producto.id"
         class="border rounded-lg shadow-lg p-6 bg-white flex flex-col items-center text-center"
       >

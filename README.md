@@ -23,7 +23,7 @@ Proyecto web desarrollado en **Vue 3 + TypeScript + Firebase**, que permite gest
 
 ## 🚀 Características Principales
 
-- ✅ Listado de productos tecnológicos.
+-   Listado de productos tecnológicos.
 - 🔁 Reactividad total al modificar el stock.
 - 🟢 Color dinámico según disponibilidad.
 - 🛒 Carrito con cantidad y suma total.

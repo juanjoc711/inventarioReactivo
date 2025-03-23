@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useCarritoStore } from "../stores/useCarritoStore";
 
@@ -10,8 +10,14 @@ const router = useRouter();
 const route = useRoute();
 
 const carrito = useCarritoStore();
-const totalCarrito = computed(() => carrito.totalCantidad);
-
+let totalCarrito = ref(0);
+watch(
+  () => carrito.items,
+  (items) => {
+    totalCarrito.value = items.reduce((acc, i) => acc + i.cantidad, 0);
+  },
+  { deep: true, immediate: true }
+);
 const cambiarVista = () => {
   if (seleccion.value === "Todos") {
     router.push("/");

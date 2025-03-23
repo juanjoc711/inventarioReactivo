@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ProductoDetalle from "../components/ProductoDetalle.vue";
-import { ref, watch, onMounted } from "vue";
+import { reactive, watch, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { db } from "../firebase/firebase";
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
@@ -19,9 +19,26 @@ interface Producto {
   disponible: boolean;
 }
 
-const producto = ref<Producto | null>(null);
+//  Producto como objeto reactivo 
+const producto = reactive<Producto>({
+  id: "",
+  nombre: "",
+  precio: 0,
+  stock: 0,
+  imagen: "",
+  disponible: false
+});
+
 const cargando = ref(true);
 const error = ref("");
+
+//  Watch reactivo: disponible sigue automáticamente al stock
+watch(
+  () => producto.stock,
+  (nuevoStock) => {
+    producto.disponible = nuevoStock > 0;
+  }
+);
 
 // Buscar producto por nombre
 const cargarProducto = async (nombreProducto: string) => {
@@ -37,14 +54,13 @@ const cargarProducto = async (nombreProducto: string) => {
       const docSnap = querySnapshot.docs[0];
       const data = docSnap.data() as Producto;
 
-      producto.value = {
-        id: docSnap.id,
-        nombre: data.nombre,
-        precio: data.precio,
-        stock: data.stock,
-        imagen: data.imagen || "",
-        disponible: data.stock > 0,
-      };
+      //  Asignación manual a reactive
+      producto.id = docSnap.id;
+      producto.nombre = data.nombre;
+      producto.precio = data.precio;
+      producto.stock = data.stock;
+      producto.imagen = data.imagen || "";
+      producto.disponible = data.stock > 0;
     } else {
       error.value = "Producto no encontrado en la base de datos.";
     }
@@ -58,30 +74,25 @@ const cargarProducto = async (nombreProducto: string) => {
 
 // Actualizar stock en Firestore
 const actualizarStock = async (cantidad: number) => {
-  if (!producto.value) return;
-
-  const nuevoStock = producto.value.stock + cantidad;
+  const nuevoStock = producto.stock + cantidad;
   if (nuevoStock < 0) return;
 
   try {
-    const productoRef = doc(db, "productos", producto.value.id);
+    const productoRef = doc(db, "productos", producto.id);
     await updateDoc(productoRef, { stock: nuevoStock });
-
-    producto.value.stock = nuevoStock;
-    producto.value.disponible = nuevoStock > 0;
+    producto.stock = nuevoStock;
+    //  disponible se actualiza automáticamente por el watch
   } catch (err) {
     console.error("  Error al actualizar el stock:", err);
   }
 };
 
-// Agregar al carrito y reflejar stock local
+// Agregar al carrito
 const agregarAlCarritoDesdeDetalle = async () => {
-  if (!producto.value || producto.value.stock <= 0) return;
-
-  await carrito.agregarProducto(producto.value);
-
-  producto.value.stock -= 1;
-  producto.value.disponible = producto.value.stock > 0;
+  if (producto.stock <= 0) return;
+  await carrito.agregarProducto(producto);
+  producto.stock -= 1;
+  //  disponible se actualiza automáticamente por el watch
 };
 
 onMounted(() => {
@@ -108,7 +119,7 @@ watch(
     <div v-else-if="error" class="text-red-500 text-center">{{ error }}</div>
 
     <ProductoDetalle
-      v-if="producto"
+      v-if="producto.id"
       :producto="producto"
       @actualizar-stock="actualizarStock"
       @agregar-al-carrito="agregarAlCarritoDesdeDetalle"
