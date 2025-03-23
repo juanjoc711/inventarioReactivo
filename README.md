@@ -23,7 +23,7 @@ Proyecto web desarrollado en **Vue 3 + TypeScript + Firebase**, que permite gest
 
 ---
 
-## 🚀 Características Principales
+## 🚀 Caracteristicas Principales
 
 -   Listado de productos tecnológicos.
 - 🔁 Reactividad total al modificar el stock.
@@ -34,7 +34,7 @@ Proyecto web desarrollado en **Vue 3 + TypeScript + Firebase**, que permite gest
 
 ---
 
-## 💻 Requisitos y Configuración
+## 💻 Requisitos y Configuracion
 
 ### Requisitos previos
 
@@ -85,7 +85,7 @@ Proyecto web desarrollado en **Vue 3 + TypeScript + Firebase**, que permite gest
 
 ---
 
-## 🛠️ Tecnologías y Arquitectura
+## 🛠️ Tecnologias y Arquitectura
 
 - **Vue 3 + TypeScript**
 - **Pinia** (gestión de estado)
@@ -150,7 +150,7 @@ mi-tienda/
 
 ---
 
-## 📝 Contribución
+## 📝 Contribucion
 
 Este proyecto ha sido desarrollado como parte de la asignatura **Programación Web II** en la Universidad Europea del Atlántico.  
 ¡Las sugerencias, mejoras y pull requests son bienvenidas!
