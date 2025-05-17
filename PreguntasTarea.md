@@ -65,7 +65,7 @@ const observarStock = (producto: Producto) => {
 };
 ```
 
-Se llama a `observarStock()` por cada producto cuando se cargan desde Firebase.
+Se llama a `observarStock()` por cada producto cuando se cargan desde el back.
 
 ### 🧠 Sobre `deep: true`
 

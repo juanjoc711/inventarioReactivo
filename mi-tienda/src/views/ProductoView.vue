@@ -2,8 +2,7 @@
 import ProductoDetalle from "../components/ProductoDetalle.vue";
 import { reactive, watch, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { db } from "../firebase/firebase";
-import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import { fetchProductos, actualizarStock as actualizarStockAPI } from "../api/api";
 import { useCarritoStore } from "../stores/useCarritoStore";
 
 const route = useRoute();
@@ -11,88 +10,71 @@ const router = useRouter();
 const carrito = useCarritoStore();
 
 interface Producto {
-  id: string;
+  id: number;
   nombre: string;
   precio: number;
   stock: number;
-  imagen: string;
   disponible: boolean;
 }
 
-//  Producto como objeto reactivo 
 const producto = reactive<Producto>({
-  id: "",
+  id: 0,
   nombre: "",
   precio: 0,
   stock: 0,
-  imagen: "",
   disponible: false
 });
 
 const cargando = ref(true);
 const error = ref("");
 
-//  Watch reactivo: disponible sigue automáticamente al stock
-watch(
-  () => producto.stock,
-  (nuevoStock) => {
-    producto.disponible = nuevoStock > 0;
-  }
-);
-
-// Buscar producto por nombre
+// Cargar producto por nombre
 const cargarProducto = async (nombreProducto: string) => {
   try {
     cargando.value = true;
     error.value = "";
 
-    const productosRef = collection(db, "productos");
-    const q = query(productosRef, where("nombre", "==", nombreProducto));
-    const querySnapshot = await getDocs(q);
+    const productos = await fetchProductos();
+    const encontrado = productos.find((p: Producto) => p.nombre.toLowerCase() === nombreProducto.toLowerCase());
 
-    if (!querySnapshot.empty) {
-      const docSnap = querySnapshot.docs[0];
-      const data = docSnap.data() as Producto;
-
-      //  Asignación manual a reactive
-      producto.id = docSnap.id;
-      producto.nombre = data.nombre;
-      producto.precio = data.precio;
-      producto.stock = data.stock;
-      producto.imagen = data.imagen || "";
-      producto.disponible = data.stock > 0;
+    if (encontrado) {
+      producto.id = encontrado.id;
+      producto.nombre = encontrado.nombre;
+      producto.precio = encontrado.precio;
+      producto.stock = encontrado.stock;
+      producto.disponible = encontrado.disponible;
     } else {
-      error.value = "Producto no encontrado en la base de datos.";
+      error.value = "Producto no encontrado.";
     }
   } catch (err) {
-    console.error("  Error al cargar el producto:", err);
+    console.error("Error al cargar el producto:", err);
     error.value = "Error al cargar el producto.";
   } finally {
     cargando.value = false;
   }
 };
 
-// Actualizar stock en Firestore
 const actualizarStock = async (cantidad: number) => {
   const nuevoStock = producto.stock + cantidad;
   if (nuevoStock < 0) return;
 
-  try {
-    const productoRef = doc(db, "productos", producto.id);
-    await updateDoc(productoRef, { stock: nuevoStock });
-    producto.stock = nuevoStock;
-    //  disponible se actualiza automáticamente por el watch
-  } catch (err) {
-    console.error("  Error al actualizar el stock:", err);
-  }
+  const actualizado = await actualizarStockAPI(producto.id, cantidad);
+  producto.stock = actualizado.stock;
+  producto.disponible = actualizado.disponible;
 };
 
-// Agregar al carrito
 const agregarAlCarritoDesdeDetalle = async () => {
   if (producto.stock <= 0) return;
-  await carrito.agregarProducto(producto);
-  producto.stock -= 1;
-  //  disponible se actualiza automáticamente por el watch
+
+  await carrito.agregarProducto({
+    id: producto.id,
+    nombre: producto.nombre,
+    precio: producto.precio
+  });
+
+  const actualizado = await actualizarStockAPI(producto.id, -1);
+  producto.stock = actualizado.stock;
+  producto.disponible = actualizado.disponible;
 };
 
 onMounted(() => {

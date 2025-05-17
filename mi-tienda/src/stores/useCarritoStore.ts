@@ -1,9 +1,8 @@
 import { defineStore } from "pinia";
-import { db } from "../firebase/firebase";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { actualizarStock } from "../api/api";
 
 interface ProductoCarrito {
-  id: string;
+  id: number;
   nombre: string;
   precio: number;
   cantidad: number;
@@ -24,15 +23,10 @@ export const useCarritoStore = defineStore("carrito", {
   },
 
   actions: {
-    async agregarProducto(producto: { id: string; nombre: string; precio: number }) {
-      const docRef = doc(db, "productos", producto.id);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
+    async agregarProducto(producto: { id: number; nombre: string; precio: number }) {
+      if (!producto) return;
 
-      const data = docSnap.data();
-      if (data.stock <= 0) return;
-
-      await updateDoc(docRef, { stock: data.stock - 1 });
+      await actualizarStock(producto.id, -1);
 
       const existente = this.items.find(p => p.id === producto.id);
       if (existente) {
@@ -42,29 +36,23 @@ export const useCarritoStore = defineStore("carrito", {
       }
     },
 
-    async quitarProducto(productoId: string) {
+    async quitarProducto(productoId: number) {
       const index = this.items.findIndex(p => p.id === productoId);
       if (index === -1) return;
 
       const producto = this.items[index];
-      const docRef = doc(db, "productos", producto.id);
-      const docSnap = await getDoc(docRef);
-      const stockActual = docSnap.exists() ? docSnap.data().stock : 0;
+      await actualizarStock(producto.id, producto.cantidad);
 
-      await updateDoc(docRef, { stock: stockActual + producto.cantidad });
       this.items.splice(index, 1);
     },
 
-    async restarUno(productoId: string) {
+    async restarUno(productoId: number) {
       const item = this.items.find(p => p.id === productoId);
       if (!item) return;
 
-      const docRef = doc(db, "productos", productoId);
-      const docSnap = await getDoc(docRef);
-      const stockActual = docSnap.exists() ? docSnap.data().stock : 0;
+      await actualizarStock(productoId, 1);
 
       item.cantidad--;
-      await updateDoc(docRef, { stock: stockActual + 1 });
 
       if (item.cantidad <= 0) {
         this.items = this.items.filter(p => p.id !== productoId);
