@@ -7,12 +7,6 @@ const emit = defineEmits(["actualizar-stock", "agregar-al-carrito"]);
   <div class="border rounded-lg shadow-lg p-6 bg-white text-center">
     <h2 class="text-2xl font-bold">{{ producto.nombre }}</h2>
 
-    <img
-      :src="producto.imagen"
-      :alt="producto.nombre"
-      class="w-48 h-48 object-cover mx-auto my-4 rounded-lg"
-    />
-
     <p class="text-gray-600 text-lg">${{ producto.precio }}</p>
     <p class="text-sm text-gray-500">Stock: {{ producto.stock }}</p>
     <p

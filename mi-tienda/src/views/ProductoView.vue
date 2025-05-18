@@ -72,7 +72,7 @@ const agregarAlCarritoDesdeDetalle = async () => {
     precio: producto.precio
   });
 
-  const actualizado = await actualizarStockAPI(producto.id, -1);
+const actualizado = await actualizarStockAPI(producto.id, 0);
   producto.stock = actualizado.stock;
   producto.disponible = actualizado.disponible;
 };

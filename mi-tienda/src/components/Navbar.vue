@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useCarritoStore } from "../stores/useCarritoStore";
 
-const productos = ["Todos", "Laptop", "Mouse", "Teclado"];
+const productos = ["Todos", "Teclado", "Ratón", "Pantalla"];
 const seleccion = ref("Todos");
 
 const router = useRouter();
@@ -11,6 +11,11 @@ const route = useRoute();
 
 const carrito = useCarritoStore();
 let totalCarrito = ref(0);
+
+const capitalizar = (texto: string) => {
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+};
+
 watch(
   () => carrito.items,
   (items) => {
@@ -22,14 +27,18 @@ const cambiarVista = () => {
   if (seleccion.value === "Todos") {
     router.push("/");
   } else {
-    router.push(`/producto/${seleccion.value}`);
+    router.push(`/producto/${seleccion.value.toLowerCase()}`);
   }
 };
 
 watch(
   () => route.params.nombre,
   (nuevoNombre) => {
-    seleccion.value = nuevoNombre ? String(nuevoNombre) : "Todos";
+    if (nuevoNombre) {
+      seleccion.value = capitalizar(nuevoNombre as string);
+    } else {
+      seleccion.value = "Todos";
+    }
   },
   { immediate: true }
 );

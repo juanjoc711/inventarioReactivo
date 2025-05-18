@@ -28,7 +28,7 @@ const actualizarStock = async (producto: Producto, cantidad: number) => {
 const agregarAlCarrito = async (producto: Producto) => {
   if (producto.stock > 0) {
     await carrito.agregarProducto(producto);
-    const actualizado = await actualizarStockAPI(producto.id, -1);
+    const actualizado = await actualizarStockAPI(producto.id, 0);  
     producto.stock = actualizado.stock;
     producto.disponible = actualizado.disponible;
   }
